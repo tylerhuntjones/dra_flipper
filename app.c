@@ -12,7 +12,7 @@
 //#include "dra_flipper_app_icons.h"
 
 #define TAG "DRA_Flipper"
-
+//test
 // Change this to BACKLIGHT_AUTO if you don't want the backlight to be continuously on.
 #define BACKLIGHT_ON 1
 
