@@ -57,7 +57,7 @@ typedef struct {
     uint32_t setting_1_index; // The team color setting index
     FuriString* setting_2_name; // The name setting
     uint8_t x; // The x coordinate
-} dra_flipperGameModel;
+} dra_flipperAppModel;
 
 /**
  * @brief      Callback for exiting the application.
@@ -128,7 +128,7 @@ static void dra_flipper_setting_1_change(VariableItem* item) {
     dra_flipperApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, setting_1_names[index]);
-    dra_flipperGameModel* model = view_get_model(app->view_main);
+    dra_flipperAppModel* model = view_get_model(app->view_main);
     model->setting_1_index = index;
 }
 
@@ -145,7 +145,7 @@ static void dra_flipper_setting_2_text_updated(void* context) {
     bool redraw = true;
     with_view_model(
         app->view_main,
-        dra_flipperGameModel * model,
+        dra_flipperAppModel * model,
         {
             furi_string_set(model->setting_2_name, app->temp_buffer);
             variable_item_set_current_value_text(
@@ -175,7 +175,7 @@ static void dra_flipper_setting_item_clicked(void* context, uint32_t index) {
         bool redraw = false;
         with_view_model(
             app->view_main,
-            dra_flipperGameModel * model,
+            dra_flipperAppModel * model,
             {
                 strncpy(
                     app->temp_buffer,
@@ -210,7 +210,7 @@ static void dra_flipper_setting_item_clicked(void* context, uint32_t index) {
  * @param      model   The model - MyModel object.
 */
 static void dra_flipper_view_main_draw_callback(Canvas* canvas, void* model) {
-    dra_flipperGameModel* my_model = (dra_flipperGameModel*)model;
+    dra_flipperAppModel* my_model = (dra_flipperAppModel*)model;
     canvas_draw_icon(canvas, my_model->x, 20, &I_glyph_1_14x40);
     canvas_draw_str(canvas, 1, 10, "LEFT/RIGHT to change x");
     FuriString* xstr = furi_string_alloc();
@@ -280,7 +280,7 @@ static bool dra_flipper_view_main_custom_event_callback(uint32_t event, void* co
         {
             bool redraw = true;
             with_view_model(
-                app->view_main, dra_flipperGameModel * _model, { UNUSED(_model); }, redraw);
+                app->view_main, dra_flipperAppModel * _model, { UNUSED(_model); }, redraw);
             return true;
         }
     case dra_flipperEventIdOkPressed:
@@ -290,7 +290,7 @@ static bool dra_flipper_view_main_custom_event_callback(uint32_t event, void* co
             bool redraw = false;
             with_view_model(
                 app->view_main,
-                dra_flipperGameModel * model,
+                dra_flipperAppModel * model,
                 { frequency = model->x * 100 + 100; },
                 redraw);
             furi_hal_speaker_start(frequency, 1.0);
@@ -319,7 +319,7 @@ static bool dra_flipper_view_main_input_callback(InputEvent* event, void* contex
             bool redraw = true;
             with_view_model(
                 app->view_main,
-                dra_flipperGameModel * model,
+                dra_flipperAppModel * model,
                 {
                     if(model->x > 0) {
                         model->x--;
@@ -331,7 +331,7 @@ static bool dra_flipper_view_main_input_callback(InputEvent* event, void* contex
             bool redraw = true;
             with_view_model(
                 app->view_main,
-                dra_flipperGameModel * model,
+                dra_flipperAppModel * model,
                 {
                     // Should we have some maximum value?
                     model->x++;
@@ -420,8 +420,8 @@ static dra_flipperApp* dra_flipper_app_alloc() {
     view_set_exit_callback(app->view_main, dra_flipper_view_main_exit_callback);
     view_set_context(app->view_main, app);
     view_set_custom_callback(app->view_main, dra_flipper_view_main_custom_event_callback);
-    view_allocate_model(app->view_main, ViewModelTypeLockFree, sizeof(dra_flipperGameModel));
-    dra_flipperGameModel* model = view_get_model(app->view_main);
+    view_allocate_model(app->view_main, ViewModelTypeLockFree, sizeof(dra_flipperAppModel));
+    dra_flipperAppModel* model = view_get_model(app->view_main);
     model->setting_1_index = setting_1_index;
     model->setting_2_name = setting_2_name;
     model->x = 0;
