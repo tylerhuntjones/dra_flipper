@@ -28,7 +28,7 @@ typedef enum {
     dra_flipperViewSubmenu, // The menu when the app starts
     dra_flipperViewTextInput, // Input for configuring text settings
     dra_flipperViewConfigure, // The configuration screen
-    dra_flipperViewGame, // The main screen
+    dra_flipperViewMain, // The main screen
     dra_flipperViewAbout, // The about screen with directions, link to social channel, etc.
 } dra_flipperView;
 
@@ -43,7 +43,7 @@ typedef struct {
     Submenu* submenu; // The application menu
     TextInput* text_input; // The text input screen
     VariableItemList* variable_item_list_config; // The configuration screen
-    View* view_game; // The main screen
+    View* view_main; // The main screen
     Widget* widget_about; // The about screen
 
     VariableItem* setting_2_item; // The name setting item (so we can update the text)
@@ -108,7 +108,7 @@ static void dra_flipper_submenu_callback(void* context, uint32_t index) {
         view_dispatcher_switch_to_view(app->view_dispatcher, dra_flipperViewConfigure);
         break;
     case dra_flipperSubmenuIndexGame:
-        view_dispatcher_switch_to_view(app->view_dispatcher, dra_flipperViewGame);
+        view_dispatcher_switch_to_view(app->view_dispatcher, dra_flipperViewMain);
         break;
     case dra_flipperSubmenuIndexAbout:
         view_dispatcher_switch_to_view(app->view_dispatcher, dra_flipperViewAbout);
@@ -121,14 +121,14 @@ static void dra_flipper_submenu_callback(void* context, uint32_t index) {
 /**
  * Our 1st sample setting is a team color.  We have 3 options: red, green, and blue.
 */
-static const char* setting_1_config_label = "Team color";
-static uint8_t setting_1_values[] = {1, 2, 4};
-static char* setting_1_names[] = {"Red", "Green", "Blue"};
+static const char* setting_1_config_label = "PL Mode";
+static uint8_t setting_1_values[] = {1, 2, 3, 4};
+static char* setting_1_names[] = {"None", "TX", "RX", "Both"};
 static void dra_flipper_setting_1_change(VariableItem* item) {
     dra_flipperApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, setting_1_names[index]);
-    dra_flipperGameModel* model = view_get_model(app->view_game);
+    dra_flipperGameModel* model = view_get_model(app->view_main);
     model->setting_1_index = index;
 }
 
@@ -137,14 +137,14 @@ static void dra_flipper_setting_1_change(VariableItem* item) {
  * setting we use a text input screen to allow the user to enter a name.  This function is
  * called when the user clicks OK on the text input screen.
 */
-static const char* setting_2_config_label = "Name";
-static const char* setting_2_entry_text = "Enter name";
-static const char* setting_2_default_value = "Bob";
+static const char* setting_2_config_label = "Callsign";
+static const char* setting_2_entry_text = "Enter Callsign";
+static const char* setting_2_default_value = "W1AW";
 static void dra_flipper_setting_2_text_updated(void* context) {
     dra_flipperApp* app = (dra_flipperApp*)context;
     bool redraw = true;
     with_view_model(
-        app->view_game,
+        app->view_main,
         dra_flipperGameModel * model,
         {
             furi_string_set(model->setting_2_name, app->temp_buffer);
@@ -174,7 +174,7 @@ static void dra_flipper_setting_item_clicked(void* context, uint32_t index) {
         // Copy the current name into the temporary buffer.
         bool redraw = false;
         with_view_model(
-            app->view_game,
+            app->view_main,
             dra_flipperGameModel * model,
             {
                 strncpy(
@@ -209,7 +209,7 @@ static void dra_flipper_setting_item_clicked(void* context, uint32_t index) {
  * @param      canvas  The canvas to draw on.
  * @param      model   The model - MyModel object.
 */
-static void dra_flipper_view_game_draw_callback(Canvas* canvas, void* model) {
+static void dra_flipper_view_main_draw_callback(Canvas* canvas, void* model) {
     dra_flipperGameModel* my_model = (dra_flipperGameModel*)model;
     canvas_draw_icon(canvas, my_model->x, 20, &I_glyph_1_14x40);
     canvas_draw_str(canvas, 1, 10, "LEFT/RIGHT to change x");
@@ -234,7 +234,7 @@ static void dra_flipper_view_game_draw_callback(Canvas* canvas, void* model) {
  * @details    This function is called when the timer is elapsed.  We use this to queue a redraw event.
  * @param      context  The context - dra_flipperApp object.
 */
-static void dra_flipper_view_game_timer_callback(void* context) {
+static void dra_flipper_view_main_timer_callback(void* context) {
     dra_flipperApp* app = (dra_flipperApp*)context;
     view_dispatcher_send_custom_event(app->view_dispatcher, dra_flipperEventIdRedrawScreen);
 }
@@ -245,12 +245,12 @@ static void dra_flipper_view_game_timer_callback(void* context) {
  *           redraw the screen periodically (so the random number is refreshed).
  * @param      context  The context - dra_flipperApp object.
 */
-static void dra_flipper_view_game_enter_callback(void* context) {
+static void dra_flipper_view_main_enter_callback(void* context) {
     uint32_t period = furi_ms_to_ticks(200);
     dra_flipperApp* app = (dra_flipperApp*)context;
     furi_assert(app->timer == NULL);
     app->timer =
-        furi_timer_alloc(dra_flipper_view_game_timer_callback, FuriTimerTypePeriodic, context);
+        furi_timer_alloc(dra_flipper_view_main_timer_callback, FuriTimerTypePeriodic, context);
     furi_timer_start(app->timer, period);
 }
 
@@ -259,7 +259,7 @@ static void dra_flipper_view_game_enter_callback(void* context) {
  * @details    This function is called when the user exits the game screen.  We stop the timer.
  * @param      context  The context - dra_flipperApp object.
 */
-static void dra_flipper_view_game_exit_callback(void* context) {
+static void dra_flipper_view_main_exit_callback(void* context) {
     dra_flipperApp* app = (dra_flipperApp*)context;
     furi_timer_stop(app->timer);
     furi_timer_free(app->timer);
@@ -272,7 +272,7 @@ static void dra_flipper_view_game_exit_callback(void* context) {
  * @param      event    The event id - dra_flipperEventId value.
  * @param      context  The context - dra_flipperApp object.
 */
-static bool dra_flipper_view_game_custom_event_callback(uint32_t event, void* context) {
+static bool dra_flipper_view_main_custom_event_callback(uint32_t event, void* context) {
     dra_flipperApp* app = (dra_flipperApp*)context;
     switch(event) {
     case dra_flipperEventIdRedrawScreen:
@@ -280,7 +280,7 @@ static bool dra_flipper_view_game_custom_event_callback(uint32_t event, void* co
         {
             bool redraw = true;
             with_view_model(
-                app->view_game, dra_flipperGameModel * _model, { UNUSED(_model); }, redraw);
+                app->view_main, dra_flipperGameModel * _model, { UNUSED(_model); }, redraw);
             return true;
         }
     case dra_flipperEventIdOkPressed:
@@ -289,7 +289,7 @@ static bool dra_flipper_view_game_custom_event_callback(uint32_t event, void* co
             float frequency;
             bool redraw = false;
             with_view_model(
-                app->view_game,
+                app->view_main,
                 dra_flipperGameModel * model,
                 { frequency = model->x * 100 + 100; },
                 redraw);
@@ -311,14 +311,14 @@ static bool dra_flipper_view_game_custom_event_callback(uint32_t event, void* co
  * @param      context  The context - dra_flipperApp object.
  * @return     true if the event was handled, false otherwise.
 */
-static bool dra_flipper_view_game_input_callback(InputEvent* event, void* context) {
+static bool dra_flipper_view_main_input_callback(InputEvent* event, void* context) {
     dra_flipperApp* app = (dra_flipperApp*)context;
     if(event->type == InputTypeShort) {
         if(event->key == InputKeyLeft) {
             // Left button clicked, reduce x coordinate.
             bool redraw = true;
             with_view_model(
-                app->view_game,
+                app->view_main,
                 dra_flipperGameModel * model,
                 {
                     if(model->x > 0) {
@@ -330,7 +330,7 @@ static bool dra_flipper_view_game_input_callback(InputEvent* event, void* contex
             // Right button clicked, increase x coordinate.
             bool redraw = true;
             with_view_model(
-                app->view_game,
+                app->view_main,
                 dra_flipperGameModel * model,
                 {
                     // Should we have some maximum value?
@@ -412,20 +412,20 @@ static dra_flipperApp* dra_flipper_app_alloc() {
         dra_flipperViewConfigure,
         variable_item_list_get_view(app->variable_item_list_config));
 
-    app->view_game = view_alloc();
-    view_set_draw_callback(app->view_game, dra_flipper_view_game_draw_callback);
-    view_set_input_callback(app->view_game, dra_flipper_view_game_input_callback);
-    view_set_previous_callback(app->view_game, dra_flipper_navigation_submenu_callback);
-    view_set_enter_callback(app->view_game, dra_flipper_view_game_enter_callback);
-    view_set_exit_callback(app->view_game, dra_flipper_view_game_exit_callback);
-    view_set_context(app->view_game, app);
-    view_set_custom_callback(app->view_game, dra_flipper_view_game_custom_event_callback);
-    view_allocate_model(app->view_game, ViewModelTypeLockFree, sizeof(dra_flipperGameModel));
-    dra_flipperGameModel* model = view_get_model(app->view_game);
+    app->view_main = view_alloc();
+    view_set_draw_callback(app->view_main, dra_flipper_view_main_draw_callback);
+    view_set_input_callback(app->view_main, dra_flipper_view_main_input_callback);
+    view_set_previous_callback(app->view_main, dra_flipper_navigation_submenu_callback);
+    view_set_enter_callback(app->view_main, dra_flipper_view_main_enter_callback);
+    view_set_exit_callback(app->view_main, dra_flipper_view_main_exit_callback);
+    view_set_context(app->view_main, app);
+    view_set_custom_callback(app->view_main, dra_flipper_view_main_custom_event_callback);
+    view_allocate_model(app->view_main, ViewModelTypeLockFree, sizeof(dra_flipperGameModel));
+    dra_flipperGameModel* model = view_get_model(app->view_main);
     model->setting_1_index = setting_1_index;
     model->setting_2_name = setting_2_name;
     model->x = 0;
-    view_dispatcher_add_view(app->view_dispatcher, dra_flipperViewGame, app->view_game);
+    view_dispatcher_add_view(app->view_dispatcher, dra_flipperViewMain, app->view_main);
 
     app->widget_about = widget_alloc();
     widget_add_text_scroll_element(
@@ -465,8 +465,8 @@ static void dra_flipper_app_free(dra_flipperApp* app) {
     free(app->temp_buffer);
     view_dispatcher_remove_view(app->view_dispatcher, dra_flipperViewAbout);
     widget_free(app->widget_about);
-    view_dispatcher_remove_view(app->view_dispatcher, dra_flipperViewGame);
-    view_free(app->view_game);
+    view_dispatcher_remove_view(app->view_dispatcher, dra_flipperViewMain);
+    view_free(app->view_main);
     view_dispatcher_remove_view(app->view_dispatcher, dra_flipperViewConfigure);
     variable_item_list_free(app->variable_item_list_config);
     view_dispatcher_remove_view(app->view_dispatcher, dra_flipperViewSubmenu);
