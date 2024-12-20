@@ -1,0 +1,12 @@
+PCB:
+ - 3.3V Audio amp
+ - Lipo battery interface with charging
+ - Squelch circut
+ - Filter?
+ 
+ 
+ 
+Flipper:
+ - GUI
+ - UART control
+ 

@@ -1,0 +1,15 @@
+App(
+    appid="dra_flipper",
+    name="[DRA818] DRA Flipper",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="main_dra_flipper_app",
+    stack_size=4 * 1024,
+    requires=[
+        "gui",
+    ],
+    order=10,
+    fap_icon="app.png",
+    fap_category="GPIO",
+    fap_icon_assets="assets",
+    fap_description="App for interacting with DRA818 modules.",
+)
