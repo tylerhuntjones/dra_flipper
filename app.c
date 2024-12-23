@@ -12,7 +12,7 @@
 #include "dra.h"
 //#include "dra_flipper_app_icons.h"
 
-#define TAG "DRA_Flipper"
+#define TAG          "DRA_Flipper"
 //test
 // Change this to BACKLIGHT_AUTO if you don't want the backlight to be continuously on.
 #define BACKLIGHT_ON 1
@@ -212,7 +212,7 @@ static void dra_flipper_setting_item_clicked(void* context, uint32_t index) {
 */
 static void dra_flipper_view_main_draw_callback(Canvas* canvas, void* model) {
     dra_flipperAppModel* my_model = (dra_flipperAppModel*)model;
-    canvas_draw_icon(canvas, my_model->x, 20, &I_glyph_1_14x40);
+    //canvas_draw_icon(canvas, my_model->x, 20, &I_glyph_1_14x40);
     canvas_draw_str(canvas, 1, 10, "LEFT/RIGHT to change x");
     FuriString* xstr = furi_string_alloc();
     furi_string_printf(xstr, "x: %u  OK=play tone", my_model->x);
@@ -368,12 +368,17 @@ static dra_flipperApp* dra_flipper_app_alloc() {
 
     app->submenu = submenu_alloc();
     submenu_add_item(
-        app->submenu, "Config", dra_flipperSubmenuIndexConfigure, dra_flipper_submenu_callback, app);
+        app->submenu,
+        "Config",
+        dra_flipperSubmenuIndexConfigure,
+        dra_flipper_submenu_callback,
+        app);
     submenu_add_item(
         app->submenu, "Play", dra_flipperSubmenuIndexGame, dra_flipper_submenu_callback, app);
     submenu_add_item(
         app->submenu, "About", dra_flipperSubmenuIndexAbout, dra_flipper_submenu_callback, app);
-    view_set_previous_callback(submenu_get_view(app->submenu), dra_flipper_navigation_exit_callback);
+    view_set_previous_callback(
+        submenu_get_view(app->submenu), dra_flipper_navigation_exit_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, dra_flipperViewSubmenu, submenu_get_view(app->submenu));
     view_dispatcher_switch_to_view(app->view_dispatcher, dra_flipperViewSubmenu);
